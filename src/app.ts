@@ -9,7 +9,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 initDb();
-// root route
 
 app.get("/", (req: Request, res: Response) => {
   res.send(`Vehicles booking platform...`);
