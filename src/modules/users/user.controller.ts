@@ -15,7 +15,7 @@ const createUser = async (req: Request, res: Response) => {
     });
   }
 };
- 
+
 const getUsers = async (req: Request, res: Response) => {
   try {
     const result = await usersServices.getUsers();
@@ -51,8 +51,23 @@ const getSingleUser = async (req: Request, res: Response) => {
 
 const updateUser = async (req: Request, res: Response) => {
   const id = req.params.id;
-  const { name, email, role, phone } = req.body;
+  const loggedInUser = req.user;
+  let { name, email, role, phone } = req.body;
+
   try {
+    // Permission check
+    if (loggedInUser?.role !== "admin" && loggedInUser?.id !== Number(id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden! You can only update your own profile.",
+      });
+    }
+
+    // Normal users cannot update role
+    if (loggedInUser.role !== "admin") {
+      role = undefined;
+    }
+
     const result = await usersServices.updateUser(
       id as string,
       name,
@@ -60,6 +75,7 @@ const updateUser = async (req: Request, res: Response) => {
       phone,
       role
     );
+
     if (!result) {
       return res.status(404).json({
         success: false,
@@ -69,11 +85,11 @@ const updateUser = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Updated user successfully",
+      message: "User updated successfully",
       data: result,
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
       details: error,
@@ -83,8 +99,33 @@ const updateUser = async (req: Request, res: Response) => {
 
 const deleteUser = async (req: Request, res: Response) => {
   const id = req.params.id;
+  const loggedInUser = req.user;
+
+  if (!loggedInUser) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized! User not logged in",
+    });
+  }
 
   try {
+    if (loggedInUser.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden! Only admin can delete users.",
+      });
+    }
+
+    const hasActiveBookings = await usersServices.checkActiveBookings(
+      id as string
+    );
+    if (hasActiveBookings) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete user with active bookings.",
+      });
+    }
+
     const result = await usersServices.deleteUser(id as string);
     if (result.rowCount === 0) {
       return res.status(404).json({
@@ -93,18 +134,19 @@ const deleteUser = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "User deleted successfully",
     });
   } catch (error: any) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
       details: error,
     });
   }
 };
+
 export const usersControllers = {
   createUser,
   getUsers,

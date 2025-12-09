@@ -10,37 +10,45 @@ const auth = (...roles: string[]) => {
       if (!authHeader) {
         return res
           .status(401)
-          .json({ message: "Unauthorized, token missing!" });
+          .json({ success: false, message: "Unauthorized, token missing!" });
       }
+
+      // Extract token
       const token = authHeader.startsWith("Bearer ")
         ? authHeader.split(" ")[1]
         : authHeader;
 
-      console.log({ token_without_bearer: token });
-
       if (!token) {
-        return res.status(500).json({
-          message: "you are not allowd!!",
+        return res.status(401).json({
+          success: false,
+          message: "Token is missing or malformed!",
         });
       }
-      const decoded = jwt.verify(
+
+      // Verify JWT
+      const decoded =  jwt.verify(
         token,
         config.jwt_secret as string
       ) as JwtPayload;
-      console.log({ decoded });
 
+      // Attach user to request
       req.user = decoded;
+      console.log(decoded);
+
+      // Check role
       if (roles.length && !roles.includes(decoded.role as string)) {
-        return res.status(500).json({
-          message: false,
-          error: "unauthorised !!",
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden! You do not have permission.",
         });
       }
+
       next();
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(401).json({
         success: false,
-        message: error.message,
+        message: "Invalid or expired token",
+        error: error.message,
       });
     }
   };

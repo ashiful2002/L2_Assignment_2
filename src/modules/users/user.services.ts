@@ -23,7 +23,7 @@ const createUser = async (payload: IUserPayload) => {
   return result.rows[0];
 };
  
-
+ 
 const getUsers = async () => {
   const result = await pool.query(`SELECT * FROM users`);
   return result;
@@ -55,7 +55,14 @@ const updateUser = async (
 
   return result.rows[0];
 };
+const checkActiveBookings = async (userId: string): Promise<boolean> => {
+  const result = await pool.query(
+    `SELECT * FROM bookings WHERE user_id = $1 AND status = 'active'`,
+    [userId]
+  );
 
+  return result.rows.length > 0;
+};
 const deleteUser = async (id: string) => {
   const result = await pool.query(
     `DELETE FROM users WHERE id = $1`,
@@ -66,7 +73,7 @@ const deleteUser = async (id: string) => {
 
 export const usersServices = {
   createUser,
- 
+ checkActiveBookings,
   getUsers,
   getSingleUser,
   updateUser,
