@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 initDb();
 
-app.get("/", (req: Request, res: Response) => {
+app.get(`${config.api_version}/`, (req: Request, res: Response) => {
   res.send(`Vehicles booking platform...`);
 });
 
@@ -21,16 +21,18 @@ app.use(`${config.api_version}/vehicles`, vehiclesRoutes);
 app.use(`${config.api_version}/bookings`, bookingroutes);
 app.use(`${config.api_version}/auth`, authRoutes);
 
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-    path: req.path,
-  });
-});
+// app.use((req: Request, res: Response) => {
+//   res.status(404).json({
+//     success: false,
+//     message: "Route not found",
+//     path: req.path,
+//   });
+// });
 
 app.get("/", (req, res) => {
-  res.send("server is running...");
+  res.send(`
+   base route is <a href="/api/v1">/api/v1</a>
+    `);
 });
 
 export default app;

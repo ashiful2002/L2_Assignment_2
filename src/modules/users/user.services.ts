@@ -22,7 +22,7 @@ const createUser = async (payload: IUserPayload) => {
 
   return result.rows[0];
 };
-
+ 
 
 const getUsers = async () => {
   const result = await pool.query(`SELECT * FROM users`);

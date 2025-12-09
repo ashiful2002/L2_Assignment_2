@@ -1,11 +1,22 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
+
 const auth = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization;
-      console.log({ authToken_nasim: token });
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader) {
+        return res
+          .status(401)
+          .json({ message: "Unauthorized, token missing!" });
+      }
+      const token = authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : authHeader;
+
+      console.log({ token_without_bearer: token });
 
       if (!token) {
         return res.status(500).json({
@@ -25,7 +36,6 @@ const auth = (...roles: string[]) => {
           error: "unauthorised !!",
         });
       }
-
       next();
     } catch (error: any) {
       res.status(500).json({
