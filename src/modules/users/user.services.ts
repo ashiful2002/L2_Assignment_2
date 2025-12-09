@@ -8,12 +8,6 @@ interface IUserPayload {
   password: string;
   phone: number;
 }
-interface IUpdatePayload {
-  name: string;
-  email: string;
-  role?: string;
-  phone: string;
-}
 const createUser = async (payload: IUserPayload) => {
   const { name, email, password, phone, role = "customer" } = payload;
   const lowerEmail = email.toLowerCase();
@@ -28,6 +22,7 @@ const createUser = async (payload: IUserPayload) => {
 
   return result.rows[0];
 };
+
 
 const getUsers = async () => {
   const result = await pool.query(`SELECT * FROM users`);
@@ -63,9 +58,7 @@ const updateUser = async (
 
 const deleteUser = async (id: string) => {
   const result = await pool.query(
-    `
-    DELETE FROM users WHERE id = $1
-    `,
+    `DELETE FROM users WHERE id = $1`,
     [id]
   );
   return result;
@@ -73,6 +66,7 @@ const deleteUser = async (id: string) => {
 
 export const usersServices = {
   createUser,
+ 
   getUsers,
   getSingleUser,
   updateUser,
